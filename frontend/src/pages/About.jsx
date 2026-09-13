@@ -1,6 +1,7 @@
 import { FiShield, FiTool, FiSettings, FiTruck, FiHeadphones } from "react-icons/fi";
 import PageHeader from "../components/PageHeader";
 import FeatureListSection from "../components/FeatureListSection";
+import TeamSection from "../components/TeamSection";
 import CTABanner from "../components/CTABanner";
 import { useSettings } from "../context/SettingsContext";
 import Seo from "../components/Seo";
@@ -36,6 +37,7 @@ export default function About() {
         image="/images/about-workshop.jpg"
         items={items}
       />
+      <TeamSection />
       <CTABanner />
     </div>
   );

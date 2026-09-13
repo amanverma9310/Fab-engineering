@@ -19,6 +19,7 @@ const projectRoutes = require("./routes/projectRoutes");
 const galleryRoutes = require("./routes/galleryRoutes");
 const settingsRoutes = require("./routes/settingsRoutes");
 const dashboardRoutes = require("./routes/dashboardRoutes");
+const teamRoutes = require("./routes/teamRoutes");
 
 connectDB();
 
@@ -57,6 +58,7 @@ app.use("/api/projects", projectRoutes);
 app.use("/api/gallery", galleryRoutes);
 app.use("/api/settings", settingsRoutes);
 app.use("/api/dashboard", dashboardRoutes);
+app.use("/api/team", teamRoutes);
 
 app.use(notFound);
 app.use(errorHandler);

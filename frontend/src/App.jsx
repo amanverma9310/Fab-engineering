@@ -23,6 +23,7 @@ import InquiriesAdmin from "./pages/admin/InquiriesAdmin";
 import MessagesAdmin from "./pages/admin/MessagesAdmin";
 import ProjectsAdmin from "./pages/admin/ProjectsAdmin";
 import GalleryAdmin from "./pages/admin/GalleryAdmin";
+import TeamAdmin from "./pages/admin/TeamAdmin";
 import SettingsAdmin from "./pages/admin/SettingsAdmin";
 import AccountAdmin from "./pages/admin/AccountAdmin";
 
@@ -69,6 +70,7 @@ export default function App() {
           <Route path="messages" element={<MessagesAdmin />} />
           <Route path="projects" element={<ProjectsAdmin />} />
           <Route path="gallery" element={<GalleryAdmin />} />
+          <Route path="team" element={<TeamAdmin />} />
           <Route path="settings" element={<SettingsAdmin />} />
           <Route path="account" element={<AccountAdmin />} />
         </Route>

@@ -7,6 +7,7 @@ import {
   FiMail,
   FiFolder,
   FiImage,
+  FiUsers,
   FiSettings,
   FiUser,
   FiLogOut,
@@ -23,6 +24,7 @@ const navItems = [
   { to: "/admin/messages", label: "Messages", icon: FiMail },
   { to: "/admin/projects", label: "Projects", icon: FiFolder },
   { to: "/admin/gallery", label: "Gallery", icon: FiImage },
+  { to: "/admin/team", label: "Team", icon: FiUsers },
   { to: "/admin/settings", label: "Settings", icon: FiSettings },
   { to: "/admin/account", label: "Account", icon: FiUser },
 ];
