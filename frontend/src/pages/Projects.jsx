@@ -6,6 +6,7 @@ import CTABanner from "../components/CTABanner";
 import { GridSkeleton } from "../components/Skeletons";
 import { resolveImage } from "../utils/resolveImage";
 import api from "../services/api";
+import Seo from "../components/Seo";
 
 export default function Projects() {
   const [projects, setProjects] = useState(null);
@@ -16,6 +17,11 @@ export default function Projects() {
 
   return (
     <div>
+      <Seo
+        title="Projects"
+        description="Browse selected fabrication and manufacturing projects completed by FAB Engineering."
+        path="/projects"
+      />
       <PageHeader
         eyebrow="SELECTED WORK"
         heading="Parts with a"

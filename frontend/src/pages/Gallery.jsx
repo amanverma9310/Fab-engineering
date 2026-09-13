@@ -6,6 +6,7 @@ import EmptyState from "../components/EmptyState";
 import { GridSkeleton } from "../components/Skeletons";
 import { resolveImage } from "../utils/resolveImage";
 import api from "../services/api";
+import Seo from "../components/Seo";
 
 export default function Gallery() {
   const [images, setImages] = useState(null);
@@ -17,6 +18,11 @@ export default function Gallery() {
 
   return (
     <div>
+      <Seo
+        title="Gallery"
+        description="See photos of the FAB Engineering workshop, machinery and finished fabrication work."
+        path="/gallery"
+      />
       <PageHeader
         eyebrow="THE WORKSHOP"
         heading="Made visible."

@@ -5,6 +5,7 @@ import { FiPhone, FiMessageCircle, FiMail, FiMapPin, FiArrowUpRight } from "reac
 import PageHeader from "../components/PageHeader";
 import { useSettings } from "../context/SettingsContext";
 import api from "../services/api";
+import Seo from "../components/Seo";
 
 const initialForm = { name: "", email: "", phone: "", subject: "", message: "" };
 
@@ -39,6 +40,11 @@ export default function Contact() {
 
   return (
     <div>
+      <Seo
+        title="Contact Us"
+        description="Get in touch with FAB Engineering for quotes, inquiries and project discussions."
+        path="/contact"
+      />
       <PageHeader
         eyebrow="GET IN TOUCH"
         heading="A conversation"

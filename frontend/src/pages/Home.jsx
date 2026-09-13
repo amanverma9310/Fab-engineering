@@ -8,6 +8,22 @@ import FeatureListSection from "../components/FeatureListSection";
 import CTABanner from "../components/CTABanner";
 import { GridSkeleton } from "../components/Skeletons";
 import api from "../services/api";
+import Seo, { SITE_URL } from "../components/Seo";
+
+const localBusinessJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "LocalBusiness",
+  name: "FAB Engineering",
+  description:
+    "FAB Engineering provides laser cutting, sheet metal fabrication, bending, powder coating and custom engineering solutions from Delhi.",
+  url: SITE_URL,
+  image: `${SITE_URL}/images/hero-1.jpg`,
+  address: {
+    "@type": "PostalAddress",
+    addressLocality: "Delhi",
+    addressCountry: "IN",
+  },
+};
 
 const whyItems = [
   { icon: <FiShield size={15} />, title: "Quality checked", description: "Every component gets the attention it deserves." },
@@ -38,6 +54,12 @@ export default function Home() {
 
   return (
     <div>
+      <Seo
+        title="Precision Fabrication & Custom Manufacturing"
+        description="FAB Engineering provides laser cutting, sheet metal fabrication, bending, powder coating and custom engineering solutions from Delhi."
+        path="/"
+        jsonLd={localBusinessJsonLd}
+      />
       <Hero />
 
       {/* Capabilities preview */}

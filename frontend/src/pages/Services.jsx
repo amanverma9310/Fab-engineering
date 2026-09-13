@@ -5,6 +5,7 @@ import CTABanner from "../components/CTABanner";
 import EmptyState from "../components/EmptyState";
 import { GridSkeleton } from "../components/Skeletons";
 import api from "../services/api";
+import Seo from "../components/Seo";
 
 export default function Services() {
   const [products, setProducts] = useState(null);
@@ -19,6 +20,11 @@ export default function Services() {
 
   return (
     <div>
+      <Seo
+        title="Our Services"
+        description="Explore FAB Engineering's fabrication services including laser cutting, sheet metal bending and powder coating."
+        path="/services"
+      />
       <PageHeader
         eyebrow="OUR CAPABILITIES"
         heading="Engineering that meets"

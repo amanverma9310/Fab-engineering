@@ -5,6 +5,7 @@ import toast from "react-hot-toast";
 import { FiArrowUpRight, FiArrowLeft, FiUpload, FiX, FiCheckCircle } from "react-icons/fi";
 import PageHeader from "../components/PageHeader";
 import api from "../services/api";
+import Seo from "../components/Seo";
 
 const steps = [
   { key: "customer", label: "Customer" },
@@ -115,6 +116,7 @@ export default function Quote() {
   if (done) {
     return (
       <div className="mx-auto flex min-h-[60vh] max-w-xl flex-col items-center justify-center px-5 text-center">
+        <Seo title="Request Received" path="/quote" noindex />
         <FiCheckCircle size={48} className="text-red" />
         <h1 className="heading-display mt-6 text-3xl text-white">Request received.</h1>
         <p className="mt-3 text-white/55">
@@ -130,6 +132,11 @@ export default function Quote() {
 
   return (
     <div>
+      <Seo
+        title="Request a Quote"
+        description="Request a custom fabrication quote from FAB Engineering. Share your project details and drawings for a fast response."
+        path="/quote"
+      />
       <PageHeader
         eyebrow="REQUEST A QUOTE"
         heading="Let's make"

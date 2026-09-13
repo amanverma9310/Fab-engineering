@@ -3,6 +3,7 @@ import PageHeader from "../components/PageHeader";
 import FeatureListSection from "../components/FeatureListSection";
 import CTABanner from "../components/CTABanner";
 import { useSettings } from "../context/SettingsContext";
+import Seo from "../components/Seo";
 
 const items = [
   { icon: <FiShield size={15} />, title: "Precision Engineering", description: "Clear thinking and careful execution at every stage." },
@@ -17,6 +18,11 @@ export default function About() {
 
   return (
     <div>
+      <Seo
+        title="About Us"
+        description="Learn about FAB Engineering's precision engineering, quality fabrication and custom manufacturing capabilities."
+        path="/about"
+      />
       <PageHeader
         eyebrow="ABOUT FAB ENGINEERING"
         heading="Engineering made"

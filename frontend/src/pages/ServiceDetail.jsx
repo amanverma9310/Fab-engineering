@@ -8,6 +8,7 @@ import { resolveImage } from "../utils/resolveImage";
 import { buildWhatsAppLink } from "../utils/whatsapp";
 import { useSettings } from "../context/SettingsContext";
 import api from "../services/api";
+import Seo from "../components/Seo";
 
 export default function ServiceDetail() {
   const { slug } = useParams();
@@ -34,6 +35,7 @@ export default function ServiceDetail() {
   if (notFound) {
     return (
       <div className="mx-auto max-w-3xl px-5 py-32 text-center">
+        <Seo title="Service Not Found" path={`/services/${slug}`} noindex />
         <h1 className="heading-display text-3xl text-white">Service not found</h1>
         <p className="mt-3 text-white/50">This service may have been renamed or removed.</p>
         <Link to="/services" className="btn-outline mt-6 inline-flex">
@@ -63,6 +65,18 @@ export default function ServiceDetail() {
 
   return (
     <div>
+      <Seo
+        title={product.name}
+        description={product.description?.slice(0, 155) || `${product.name} — a fabrication service from FAB Engineering.`}
+        path={`/services/${product.slug || slug}`}
+        jsonLd={{
+          "@context": "https://schema.org",
+          "@type": "Service",
+          name: product.name,
+          description: product.description,
+          provider: { "@type": "LocalBusiness", name: "FAB Engineering" },
+        }}
+      />
       <div className="mx-auto max-w-7xl px-5 pt-10 sm:px-8">
         <Link to="/services" className="inline-flex items-center gap-1.5 text-sm text-white/50 hover:text-white">
           <FiArrowLeft size={14} /> All services

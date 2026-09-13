@@ -2,6 +2,7 @@ import { FiShield, FiTool, FiSettings, FiTruck, FiHeadphones } from "react-icons
 import PageHeader from "../components/PageHeader";
 import FeatureListSection from "../components/FeatureListSection";
 import CTABanner from "../components/CTABanner";
+import Seo from "../components/Seo";
 
 const items = [
   { icon: <FiShield size={15} />, title: "Precision Engineering", description: "Clear thinking and careful execution at every stage." },
@@ -14,6 +15,11 @@ const items = [
 export default function Capabilities() {
   return (
     <div>
+      <Seo
+        title="Capabilities"
+        description="Explore the machinery, processes and floor capabilities at FAB Engineering."
+        path="/capabilities"
+      />
       <PageHeader
         eyebrow="CAPABILITIES"
         heading="A capable shop"
