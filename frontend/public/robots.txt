@@ -2,4 +2,4 @@ User-agent: *
 Allow: /
 Disallow: /admin
 
-Sitemap: https://frontend-aman-9df7.vercel.app/sitemap.xml
+Sitemap: https://frontend-chi-peach-20.vercel.app/sitemap.xml

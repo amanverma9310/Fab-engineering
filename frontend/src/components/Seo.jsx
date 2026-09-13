@@ -1,7 +1,7 @@
 import { Helmet } from "react-helmet-async";
 
 const SITE_NAME = "FAB Engineering";
-const SITE_URL = "https://frontend-aman-9df7.vercel.app";
+const SITE_URL = "https://frontend-chi-peach-20.vercel.app";
 const DEFAULT_IMAGE = `${SITE_URL}/images/hero-1.jpg`;
 
 /**
