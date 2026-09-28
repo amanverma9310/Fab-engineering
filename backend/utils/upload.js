@@ -32,12 +32,28 @@ function cloudinaryStorage(folder) {
   });
 }
 
-function fileFilterFor(allowedPattern) {
+function fileFilterFor(allowedPattern, kind = "images") {
   return (req, file, cb) => {
     const ext = path.extname(file.originalname).toLowerCase().replace(".", "");
-    const mimetypeOk = file.mimetype.startsWith("image/") || allowedPattern.test(ext);
     const extOk = allowedPattern.test(ext);
-    if (extOk || mimetypeOk) return cb(null, true);
+    
+    let mimetypeOk = false;
+    if (kind === "images") {
+      mimetypeOk = file.mimetype.startsWith("image/") && allowedPattern.test(file.mimetype.split("/")[1]);
+    } else {
+      const allowedMimeTypes = {
+        jpeg: "image/jpeg",
+        jpg: "image/jpeg",
+        png: "image/png",
+        pdf: "application/pdf",
+        dxf: "application/dxf",
+        dwg: "application/dwg",
+        zip: "application/zip",
+      };
+      mimetypeOk = allowedMimeTypes[ext] === file.mimetype;
+    }
+    
+    if (extOk && mimetypeOk) return cb(null, true);
     cb(new Error(`Unsupported file type: ${ext || file.mimetype}`));
   };
 }
@@ -55,7 +71,7 @@ function createUploader(folder, kind = "images") {
     files: kind === "documents" ? 5 : 10,
   };
 
-  return multer({ storage, fileFilter: fileFilterFor(allowed), limits });
+  return multer({ storage, fileFilter: fileFilterFor(allowed, kind), limits });
 }
 
 // Turns whatever multer/Cloudinary gives back into a plain { url, filename... }

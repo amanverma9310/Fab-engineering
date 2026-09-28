@@ -7,7 +7,7 @@ import { useSettings } from "../context/SettingsContext";
 import api from "../services/api";
 import Seo from "../components/Seo";
 
-const initialForm = { name: "", email: "", phone: "", subject: "", message: "" };
+const initialForm = { name: "", email: "", phone: "", subject: "", message: "", website: "" };
 
 export default function Contact() {
   const { settings } = useSettings();
@@ -117,6 +117,17 @@ export default function Contact() {
                 className="input-field resize-none"
               />
             </div>
+            {/* Honeypot field - hidden from humans, catches bots */}
+            <input
+              type="text"
+              name="website"
+              value={form.website}
+              onChange={handleChange}
+              tabIndex={-1}
+              autoComplete="off"
+              style={{ display: "none", opacity: 0, position: "absolute", left: "-9999px", pointerEvents: "none" }}
+              aria-hidden="true"
+            />
             <button type="submit" disabled={submitting} className="btn-primary mt-8">
               {submitting ? "Sending..." : "Send message"} <FiArrowUpRight />
             </button>

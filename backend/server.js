@@ -10,6 +10,7 @@ const mongoSanitize = require("express-mongo-sanitize");
 
 const connectDB = require("./config/db");
 const { notFound, errorHandler } = require("./middleware/errorHandler");
+const { csrfProtection } = require("./middleware/csrf");
 
 const authRoutes = require("./routes/authRoutes");
 const productRoutes = require("./routes/productRoutes");
@@ -28,8 +29,28 @@ app.set("trust proxy", 1);
 
 app.use(
   helmet({
-    // Allow the frontend (on a different origin) to load uploaded images.
     crossOriginResourcePolicy: { policy: "cross-origin" },
+    contentSecurityPolicy: {
+      useDefaults: true,
+      directives: {
+        "default-src": ["'self'"],
+        "script-src": ["'self'"],
+        "style-src": ["'self'", "'unsafe-inline'"],
+        "img-src": ["'self'", "data:", "https:"],
+        "font-src": ["'self'"],
+        "connect-src": ["'self'", process.env.CORS_ORIGIN || "http://localhost:5173"],
+        "frame-ancestors": ["'none'"],
+      },
+    },
+    hsts: {
+      maxAge: 31536000,
+      includeSubDomains: true,
+      preload: true,
+    },
+    referrerPolicy: { policy: "strict-origin-when-cross-origin" },
+    noSniff: true,
+    xssFilter: true,
+    frameguard: { action: "deny" },
   })
 );
 
@@ -44,6 +65,8 @@ app.use(mongoSanitize());
 if (process.env.NODE_ENV !== "production") {
   app.use(morgan("dev"));
 }
+
+app.use(csrfProtection);
 
 // Serves locally-uploaded files (dev / no Cloudinary configured).
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));

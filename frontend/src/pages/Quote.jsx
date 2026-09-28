@@ -27,6 +27,7 @@ const initialForm = {
   projectDetails: "",
   expectedDate: "",
   address: "",
+  website: "",
 };
 
 export default function Quote() {
@@ -193,6 +194,17 @@ export default function Quote() {
                       <label className="label-field">WhatsApp</label>
                       <input name="whatsapp" value={form.whatsapp} onChange={handleChange} className="input-field" />
                     </div>
+                    {/* Honeypot field - hidden from humans, catches bots */}
+                    <input
+                      type="text"
+                      name="website"
+                      value={form.website}
+                      onChange={handleChange}
+                      tabIndex={-1}
+                      autoComplete="off"
+                      style={{ display: "none", opacity: 0, position: "absolute", left: "-9999px", pointerEvents: "none" }}
+                      aria-hidden="true"
+                    />
                     <div className="sm:col-span-2">
                       <label className="label-field">Service required *</label>
                       <select name="product" value={form.product} onChange={handleChange} className="input-field">

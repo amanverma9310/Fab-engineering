@@ -1,16 +1,31 @@
 import axios from "axios";
 
-// Single source of truth for the backend base URL — never hardcode it in
-// components. Falls back to localhost for local development.
+const CSRF_COOKIE_NAME = "csrf_token";
+const CSRF_HEADER_NAME = "x-csrf-token";
+
+function getCsrfToken() {
+  const match = document.cookie.match(new RegExp(`(^| )${CSRF_COOKIE_NAME}=([^;]+)`));
+  return match ? match[2] : null;
+}
+
 export const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
-// The origin (no /api suffix) — used to resolve locally-uploaded file paths
-// like "/uploads/products/xyz.jpg" into a full URL.
 export const SERVER_ORIGIN = API_URL.replace(/\/api\/?$/, "");
 
 const api = axios.create({
   baseURL: API_URL,
-  withCredentials: true, // send/receive the httpOnly admin auth cookie
+  withCredentials: true,
+});
+
+api.interceptors.request.use((config) => {
+  const unsafeMethods = ["post", "put", "patch", "delete"];
+  if (unsafeMethods.includes(config.method?.toLowerCase())) {
+    const token = getCsrfToken();
+    if (token) {
+      config.headers[CSRF_HEADER_NAME] = token;
+    }
+  }
+  return config;
 });
 
 api.interceptors.response.use(
