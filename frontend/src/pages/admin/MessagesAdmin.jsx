@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { FiSearch, FiX, FiTrash2 } from "react-icons/fi";
-import api from "../../services/api";
+import api, { ensureCsrfToken } from "../../services/api";
 
 const STATUSES = ["All", "New", "Read", "Replied"];
 
@@ -12,6 +12,10 @@ export default function MessagesAdmin() {
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState(null);
+
+  useEffect(() => {
+    ensureCsrfToken().catch(() => {});
+  }, []);
 
   const load = async (page = 1) => {
     setLoading(true);

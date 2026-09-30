@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import { FiLock } from "react-icons/fi";
 import { useAuth } from "../../context/AuthContext";
+import api, { ensureCsrfToken } from "../../services/api";
 
 export default function AdminLogin() {
   const { login, isAuthenticated, loading } = useAuth();
@@ -9,6 +10,10 @@ export default function AdminLogin() {
   const [form, setForm] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    ensureCsrfToken().catch(() => {});
+  }, []);
 
   if (!loading && isAuthenticated) return <Navigate to="/admin/dashboard" replace />;
 

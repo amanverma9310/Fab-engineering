@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import toast from "react-hot-toast";
 import { FiArrowUpRight, FiArrowLeft, FiUpload, FiX, FiCheckCircle } from "react-icons/fi";
 import PageHeader from "../components/PageHeader";
-import api from "../services/api";
+import api, { ensureCsrfToken } from "../services/api";
 import Seo from "../components/Seo";
 
 const steps = [
@@ -41,6 +41,7 @@ export default function Quote() {
   const [done, setDone] = useState(null);
 
   useEffect(() => {
+    ensureCsrfToken().catch(() => {});
     api.get("/products").then((res) => setProducts(res.data)).catch(() => setProducts([]));
   }, []);
 

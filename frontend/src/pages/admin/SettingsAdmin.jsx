@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
-import api from "../../services/api";
+import api, { ensureCsrfToken } from "../../services/api";
 import { resolveImage } from "../../utils/resolveImage";
 
 export default function SettingsAdmin() {
@@ -10,6 +10,7 @@ export default function SettingsAdmin() {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
+    ensureCsrfToken().catch(() => {});
     api
       .get("/settings")
       .then((res) => setForm(res.data))

@@ -21,6 +21,7 @@ const galleryRoutes = require("./routes/galleryRoutes");
 const settingsRoutes = require("./routes/settingsRoutes");
 const dashboardRoutes = require("./routes/dashboardRoutes");
 const teamRoutes = require("./routes/teamRoutes");
+const csrfRoutes = require("./routes/csrfRoutes");
 
 connectDB();
 
@@ -82,6 +83,7 @@ app.use("/api/gallery", galleryRoutes);
 app.use("/api/settings", settingsRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/team", teamRoutes);
+app.use("/api", csrfRoutes);
 
 app.use(notFound);
 app.use(errorHandler);

@@ -1,12 +1,9 @@
 import axios from "axios";
 
-const CSRF_COOKIE_NAME = "csrf_token";
 const CSRF_HEADER_NAME = "x-csrf-token";
 
-function getCsrfToken() {
-  const match = document.cookie.match(new RegExp(`(^| )${CSRF_COOKIE_NAME}=([^;]+)`));
-  return match ? match[2] : null;
-}
+let csrfToken = null;
+let csrfTokenPromise = null;
 
 export const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
@@ -17,10 +14,35 @@ const api = axios.create({
   withCredentials: true,
 });
 
-api.interceptors.request.use((config) => {
+async function ensureCsrfToken() {
+  if (csrfToken) return csrfToken;
+  if (csrfTokenPromise) return csrfTokenPromise;
+
+  csrfTokenPromise = (async () => {
+    try {
+      const res = await axios.get(`${API_URL}/csrf-token`, { withCredentials: true });
+      csrfToken = res.data?.csrfToken || null;
+      return csrfToken;
+    } catch {
+      csrfToken = null;
+      return null;
+    } finally {
+      csrfTokenPromise = null;
+    }
+  })();
+
+  return csrfTokenPromise;
+}
+
+function clearCsrfToken() {
+  csrfToken = null;
+  csrfTokenPromise = null;
+}
+
+api.interceptors.request.use(async (config) => {
   const unsafeMethods = ["post", "put", "patch", "delete"];
   if (unsafeMethods.includes(config.method?.toLowerCase())) {
-    const token = getCsrfToken();
+    const token = await ensureCsrfToken();
     if (token) {
       config.headers[CSRF_HEADER_NAME] = token;
     }
@@ -31,6 +53,9 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (res) => res.data,
   (err) => {
+    if (err.response?.status === 403 && err.response?.data?.message === "Invalid CSRF token") {
+      clearCsrfToken();
+    }
     const message =
       err.response?.data?.message ||
       (err.request ? "Can't reach the server. Please try again shortly." : err.message);
@@ -38,4 +63,5 @@ api.interceptors.response.use(
   }
 );
 
+export { ensureCsrfToken, clearCsrfToken };
 export default api;

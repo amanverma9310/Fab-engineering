@@ -1,10 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import toast from "react-hot-toast";
 import { FiPhone, FiMessageCircle, FiMail, FiMapPin, FiArrowUpRight } from "react-icons/fi";
 import PageHeader from "../components/PageHeader";
 import { useSettings } from "../context/SettingsContext";
-import api from "../services/api";
+import api, { ensureCsrfToken } from "../services/api";
 import Seo from "../components/Seo";
 
 const initialForm = { name: "", email: "", phone: "", subject: "", message: "", website: "" };
@@ -13,6 +13,10 @@ export default function Contact() {
   const { settings } = useSettings();
   const [form, setForm] = useState(initialForm);
   const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    ensureCsrfToken().catch(() => {});
+  }, []);
 
   const handleChange = (e) => setForm((f) => ({ ...f, [e.target.name]: e.target.value }));
 

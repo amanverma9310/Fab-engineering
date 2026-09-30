@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { FiSearch, FiX, FiTrash2, FiDownload } from "react-icons/fi";
-import api from "../../services/api";
+import api, { ensureCsrfToken } from "../../services/api";
 import { resolveImage } from "../../utils/resolveImage";
 
 const STATUSES = ["All", "New", "Reviewing", "Contacted", "Quoted", "Approved", "In Progress", "Completed", "Rejected"];
@@ -14,6 +14,10 @@ export default function InquiriesAdmin() {
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState(null);
   const [notes, setNotes] = useState("");
+
+  useEffect(() => {
+    ensureCsrfToken().catch(() => {});
+  }, []);
 
   const load = async (page = 1) => {
     setLoading(true);

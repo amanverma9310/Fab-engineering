@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { FiUpload, FiTrash2, FiX } from "react-icons/fi";
-import api from "../../services/api";
+import api, { ensureCsrfToken } from "../../services/api";
 import { resolveImage } from "../../utils/resolveImage";
 
 export default function GalleryAdmin() {
@@ -12,11 +12,14 @@ export default function GalleryAdmin() {
   const [category, setCategory] = useState("");
   const [files, setFiles] = useState([]);
 
-  const load = () => {
-    setLoading(true);
-    api.get("/gallery").then((res) => setImages(res.data)).catch((err) => toast.error(err.message)).finally(() => setLoading(false));
-  };
-  useEffect(load, []);
+  useEffect(() => {
+    ensureCsrfToken().catch(() => {});
+    const load = () => {
+      setLoading(true);
+      api.get("/gallery").then((res) => setImages(res.data)).catch((err) => toast.error(err.message)).finally(() => setLoading(false));
+    };
+    load();
+  }, []);
 
   const handleUpload = async (e) => {
     e.preventDefault();

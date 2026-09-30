@@ -1,9 +1,12 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
 import { useAuth } from "../../context/AuthContext";
-import api from "../../services/api";
+import api, { ensureCsrfToken } from "../../services/api";
 
 export default function AccountAdmin() {
+  useEffect(() => {
+    ensureCsrfToken().catch(() => {});
+  }, []);
   const { admin, checkAuth } = useAuth();
   const [form, setForm] = useState({
     name: admin?.name || "",

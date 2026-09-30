@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { FiPlus, FiEdit2, FiTrash2, FiX, FiStar } from "react-icons/fi";
-import api from "../../services/api";
+import api, { ensureCsrfToken } from "../../services/api";
 import { resolveImage } from "../../utils/resolveImage";
 
 const emptyForm = {
@@ -27,16 +27,18 @@ export default function ProductsAdmin() {
   const [newFiles, setNewFiles] = useState([]);
   const [saving, setSaving] = useState(false);
 
-  const load = () => {
-    setLoading(true);
-    api
-      .get("/products?all=true")
-      .then((res) => setProducts(res.data))
-      .catch((err) => toast.error(err.message))
-      .finally(() => setLoading(false));
-  };
-
-  useEffect(load, []);
+  useEffect(() => {
+    ensureCsrfToken().catch(() => {});
+    const load = () => {
+      setLoading(true);
+      api
+        .get("/products?all=true")
+        .then((res) => setProducts(res.data))
+        .catch((err) => toast.error(err.message))
+        .finally(() => setLoading(false));
+    };
+    load();
+  }, []);
 
   const openNew = () => {
     setForm(emptyForm);
