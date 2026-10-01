@@ -36,10 +36,10 @@ function buildTransporter() {
 
 function escapeHtml(str = "") {
   return String(str)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
+    .replace(/&/g, "&")
+    .replace(/</g, "<")
+    .replace(/>/g, ">")
+    .replace(/"/g, """);
 }
 
 function rows(fields) {
@@ -56,6 +56,11 @@ function rows(fields) {
  * customer-facing response.
  */
 async function sendOwnerNotification({ subject, fields }) {
+  console.log("[email] sendOwnerNotification called, configured:", isEmailConfigured());
+  console.log("[email] EMAIL_SERVICE:", process.env.EMAIL_SERVICE);
+  console.log("[email] EMAIL_USER:", process.env.EMAIL_USER ? "***" : "NOT SET");
+  console.log("[email] NOTIFY_EMAIL:", process.env.NOTIFY_EMAIL || "NOT SET (will use EMAIL_USER)");
+  
   if (!isEmailConfigured()) {
     console.warn("[email] Skipping notification — EMAIL_SERVICE/EMAIL_USER/EMAIL_PASS not set.");
     return { sent: false, reason: "not_configured" };
@@ -64,26 +69,33 @@ async function sendOwnerNotification({ subject, fields }) {
   try {
     const transporter = buildTransporter();
     const to = process.env.NOTIFY_EMAIL || process.env.EMAIL_USER;
-    await transporter.sendMail({
+    console.log("[email] Sending to:", to);
+    const result = await transporter.sendMail({
       from: `"FAB Engineering Website" <${process.env.EMAIL_USER}>`,
       to,
       subject,
       html: `<div style="font-family:sans-serif;line-height:1.6">${rows(fields)}</div>`,
     });
+    console.log("[email] Owner notification sent:", result.messageId || result.id);
     return { sent: true };
   } catch (err) {
     console.error("[email] Failed to send owner notification:", err.message);
-    return { sent: false, reason: "send_failed" };
+    console.error("[email] Full error:", err);
+    return { sent: false, reason: "send_failed", error: err.message };
   }
 }
 
 /** Optional confirmation email to the customer — also never throws. */
 async function sendCustomerConfirmation({ to, name, referenceId }) {
-  if (!isEmailConfigured() || !to) return { sent: false };
+  console.log("[email] sendCustomerConfirmation called for:", to);
+  if (!isEmailConfigured() || !to) {
+    console.warn("[email] Skipping customer confirmation — not configured or no recipient");
+    return { sent: false };
+  }
 
   try {
     const transporter = buildTransporter();
-    await transporter.sendMail({
+    const result = await transporter.sendMail({
       from: `"FAB Engineering" <${process.env.EMAIL_USER}>`,
       to,
       subject: `We've received your request${referenceId ? ` (${referenceId})` : ""}`,
@@ -97,9 +109,11 @@ async function sendCustomerConfirmation({ to, name, referenceId }) {
         </div>
       `,
     });
+    console.log("[email] Customer confirmation sent:", result.messageId || result.id);
     return { sent: true };
   } catch (err) {
     console.error("[email] Failed to send customer confirmation:", err.message);
+    console.error("[email] Full error:", err);
     return { sent: false };
   }
 }
