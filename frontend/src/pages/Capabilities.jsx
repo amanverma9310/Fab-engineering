@@ -23,7 +23,7 @@ export default function Capabilities() {
       <PageHeader
         eyebrow="CAPABILITIES"
         heading="A capable shop"
-        accentLine="floor.."
+        accentLine="floor."
         text="From sheet metal parts and machine components to welding, prototype manufacturing and custom metal components — bring the requirement, we'll shape the route."
       />
       <FeatureListSection

@@ -1,14 +1,15 @@
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { FiArrowUpRight } from "react-icons/fi";
+import { resolveImage } from "../utils/resolveImage";
 
 export default function ServiceCard({ number, title, description, tags = [], to, index = 0, ctaLabel = "Discover" }) {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 24 }}
+      initial={{ opacity: 0, y: 16 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, amount: 0.3 }}
-      transition={{ duration: 0.45, delay: (index % 3) * 0.08 }}
+      transition={{ duration: 0.35, delay: (index % 3) * 0.06 }}
     >
       <Link
         to={to}

@@ -7,7 +7,7 @@ const getCsrfTokenHandler = (req, res) => {
     token = crypto.randomBytes(32).toString("hex");
     const isProd = process.env.NODE_ENV === "production";
     res.cookie("csrf_token", token, {
-      httpOnly: false,
+      httpOnly: true,
       secure: isProd,
       sameSite: isProd ? "none" : "lax",
       maxAge: 7 * 24 * 60 * 60 * 1000,

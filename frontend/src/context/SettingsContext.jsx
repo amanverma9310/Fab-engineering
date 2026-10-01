@@ -4,10 +4,10 @@ import api from "../services/api";
 const defaultSettings = {
   companyName: "FAB Engineering",
   logo: "",
-  phone: "93115 75271",
-  whatsapp: "+91 78178 27362",
-  email: "abhiverma9315@gmail.com",
-  address: "Tughlakabad Gaun, Delhi",
+  phone: "",
+  whatsapp: "",
+  email: "",
+  address: "",
   heroHeading: "Precision Engineering. Built to Perform.",
   heroText:
     "Laser cutting, sheet metal fabrication, bending and custom manufacturing for teams that need dependable results.",
@@ -25,13 +25,21 @@ export function SettingsProvider({ children }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let mounted = true;
     api
       .get("/settings")
-      .then((res) => setSettings({ ...defaultSettings, ...res.data }))
+      .then((res) => {
+        if (mounted) setSettings({ ...defaultSettings, ...res.data });
+      })
       .catch(() => {
         // Backend unreachable — keep sensible defaults so the site still renders.
       })
-      .finally(() => setLoading(false));
+      .finally(() => {
+        if (mounted) setLoading(false);
+      });
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   return (

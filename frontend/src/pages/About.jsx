@@ -27,7 +27,7 @@ export default function About() {
       <PageHeader
         eyebrow="ABOUT FAB ENGINEERING"
         heading="Engineering made"
-        accentLine="practical.."
+        accentLine="practical."
         text={settings.aboutContent}
       />
       <FeatureListSection

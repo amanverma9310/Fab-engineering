@@ -19,6 +19,18 @@ const {
 
 const router = express.Router();
 
+// Indian mobile number validation: 10 digits starting with 6-9
+const indianPhoneRegex = /^[6-9]\d{9}$/;
+
+function normalizeIndianPhone(phone) {
+  if (!phone) return phone;
+  const digits = phone.replace(/\D/g, "");
+  if (digits.length === 10) return digits;
+  if (digits.length === 11 && digits.startsWith("0")) return digits.slice(1);
+  if (digits.length === 12 && digits.startsWith("91")) return digits.slice(2);
+  return digits;
+}
+
 const contactValidation = [
   body("name").trim().notEmpty().withMessage("Name is required").isLength({ max: 100 }).withMessage("Name too long"),
   body("email").trim().isEmail().withMessage("A valid email is required").normalizeEmail(),
@@ -27,7 +39,17 @@ const contactValidation = [
     .trim()
     .isLength({ min: 10, max: 5000 })
     .withMessage("Message must be between 10 and 5000 characters"),
-  body("phone").optional().trim().isLength({ max: 30 }).withMessage("Phone too long"),
+  body("phone")
+    .optional({ nullable: true })
+    .trim()
+    .custom((value) => {
+      if (!value || value.trim() === "") return true;
+      const normalized = normalizeIndianPhone(value);
+      if (!indianPhoneRegex.test(normalized)) {
+        throw new Error("Phone must be a valid 10-digit Indian mobile number");
+      }
+      return true;
+    }),
   body("service").optional().trim().isLength({ max: 100 }).withMessage("Service too long"),
 ];
 

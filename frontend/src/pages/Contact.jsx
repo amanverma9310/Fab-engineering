@@ -1,16 +1,17 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import toast from "react-hot-toast";
-import { FiPhone, FiMessageCircle, FiMail, FiMapPin, FiArrowUpRight } from "react-icons/fi";
+import { FiPhone, FiMessageCircle, FiMail, FiMapPin, FiArrowUpRight, FiLoader } from "react-icons/fi";
 import PageHeader from "../components/PageHeader";
 import { useSettings } from "../context/SettingsContext";
 import api, { ensureCsrfToken } from "../services/api";
 import Seo from "../components/Seo";
+import { normalizePhoneToE164, formatPhoneForDisplay } from "../utils/phone";
 
 const initialForm = { name: "", email: "", phone: "", subject: "", message: "", website: "" };
 
 export default function Contact() {
-  const { settings } = useSettings();
+  const { settings, loading: settingsLoading } = useSettings();
   const [form, setForm] = useState(initialForm);
   const [submitting, setSubmitting] = useState(false);
 
@@ -35,12 +36,24 @@ export default function Contact() {
     }
   };
 
-  const infoItems = [
-    { icon: <FiPhone size={18} />, label: "Phone", value: settings.phone, href: `tel:${settings.phone}` },
-    { icon: <FiMessageCircle size={18} />, label: "WhatsApp", value: settings.whatsapp, href: `https://wa.me/${(settings.whatsapp || "").replace(/\D/g, "")}` },
-    { icon: <FiMail size={18} />, label: "Email", value: settings.email, href: `mailto:${settings.email}` },
-    { icon: <FiMapPin size={18} />, label: "Visit", value: settings.address, href: null },
-  ];
+  const phoneE164 = normalizePhoneToE164(settings.phone);
+  const whatsappE164 = normalizePhoneToE164(settings.whatsapp);
+  const phoneDisplay = formatPhoneForDisplay(settings.phone) || settings.phone;
+  const whatsappDisplay = formatPhoneForDisplay(settings.whatsapp) || settings.whatsapp;
+
+  const infoItems = settingsLoading
+    ? [
+        { icon: <FiPhone size={18} />, label: "Phone", value: "—", href: null, loading: true },
+        { icon: <FiMessageCircle size={18} />, label: "WhatsApp", value: "—", href: null, loading: true },
+        { icon: <FiMail size={18} />, label: "Email", value: "—", href: null, loading: true },
+        { icon: <FiMapPin size={18} />, label: "Visit", value: "—", href: null, loading: true },
+      ]
+    : [
+        { icon: <FiPhone size={18} />, label: "Phone", value: phoneDisplay, href: phoneE164 ? `tel:${phoneE164}` : null },
+        { icon: <FiMessageCircle size={18} />, label: "WhatsApp", value: whatsappDisplay, href: whatsappE164 ? `https://wa.me/${whatsappE164.replace(/^\+/, "")}` : null },
+        { icon: <FiMail size={18} />, label: "Email", value: settings.email, href: settings.email ? `mailto:${settings.email}` : null },
+        { icon: <FiMapPin size={18} />, label: "Visit", value: settings.address, href: null },
+      ];
 
   return (
     <div>
@@ -71,7 +84,12 @@ export default function Contact() {
                 <span className="mt-0.5 text-red">{item.icon}</span>
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-wide text-white/40">{item.label}</p>
-                  {item.href ? (
+                  {item.loading ? (
+                    <div className="flex items-center gap-2 text-white/50">
+                      <FiLoader className="animate-spin" size={16} />
+                      <span>Loading…</span>
+                    </div>
+                  ) : item.href ? (
                     <a href={item.href} target={item.href.startsWith("http") ? "_blank" : undefined} rel="noreferrer" className="text-base font-bold text-white hover:text-red">
                       {item.value}
                     </a>
@@ -93,25 +111,26 @@ export default function Contact() {
           >
             <div className="grid gap-6 sm:grid-cols-2">
               <div>
-                <label className="label-field">Name *</label>
-                <input name="name" value={form.name} onChange={handleChange} required className="input-field" />
+                <label htmlFor="contact-name" className="label-field">Name *</label>
+                <input id="contact-name" name="name" value={form.name} onChange={handleChange} required className="input-field" autoComplete="name" />
               </div>
               <div>
-                <label className="label-field">Email *</label>
-                <input type="email" name="email" value={form.email} onChange={handleChange} required className="input-field" />
+                <label htmlFor="contact-email" className="label-field">Email *</label>
+                <input type="email" id="contact-email" name="email" value={form.email} onChange={handleChange} required className="input-field" autoComplete="email" />
               </div>
               <div>
-                <label className="label-field">Phone</label>
-                <input name="phone" value={form.phone} onChange={handleChange} className="input-field" />
+                <label htmlFor="contact-phone" className="label-field">Phone</label>
+                <input id="contact-phone" name="phone" value={form.phone} onChange={handleChange} className="input-field" autoComplete="tel" inputMode="tel" />
               </div>
               <div>
-                <label className="label-field">Subject</label>
-                <input name="subject" value={form.subject} onChange={handleChange} className="input-field" />
+                <label htmlFor="contact-subject" className="label-field">Subject</label>
+                <input id="contact-subject" name="subject" value={form.subject} onChange={handleChange} className="input-field" />
               </div>
             </div>
             <div className="mt-6">
-              <label className="label-field">Message *</label>
+              <label htmlFor="contact-message" className="label-field">Message *</label>
               <textarea
+                id="contact-message"
                 name="message"
                 value={form.message}
                 onChange={handleChange}
@@ -119,7 +138,9 @@ export default function Contact() {
                 minLength={10}
                 rows={6}
                 className="input-field resize-none"
+                aria-describedby="contact-message-hint"
               />
+              <p id="contact-message-hint" className="mt-1 text-xs text-white/40">Minimum 10 characters</p>
             </div>
             {/* Honeypot field - hidden from humans, catches bots */}
             <input

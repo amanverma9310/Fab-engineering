@@ -44,8 +44,9 @@ export default function AdminLogin() {
 
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>
-            <label className="label-field">Email</label>
+            <label htmlFor="admin-email" className="label-field">Email</label>
             <input
+              id="admin-email"
               type="email"
               value={form.email}
               onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
@@ -55,8 +56,9 @@ export default function AdminLogin() {
             />
           </div>
           <div>
-            <label className="label-field">Password</label>
+            <label htmlFor="admin-password" className="label-field">Password</label>
             <input
+              id="admin-password"
               type="password"
               value={form.password}
               onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))}
@@ -67,7 +69,7 @@ export default function AdminLogin() {
           </div>
 
           {error && (
-            <p className="rounded-lg border border-red/20 bg-red/10 px-3 py-2 text-sm text-red">{error}</p>
+            <p className="rounded-lg border border-red/20 bg-red/10 px-3 py-2 text-sm text-red" role="alert">{error}</p>
           )}
 
           <button type="submit" disabled={submitting} className="btn-primary w-full justify-center">

@@ -1,7 +1,8 @@
 import { Helmet } from "react-helmet-async";
 
 const SITE_NAME = "FAB Engineering";
-const SITE_URL = "https://frontend-chi-peach-20.vercel.app";
+// Use environment variable for production URL, fallback to Vercel preview URL for development
+const SITE_URL = import.meta.env.VITE_SITE_URL || "https://frontend-chi-peach-20.vercel.app";
 const DEFAULT_IMAGE = `${SITE_URL}/images/hero-1.jpg`;
 
 /**

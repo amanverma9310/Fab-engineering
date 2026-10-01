@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { FiArrowUpRight, FiCheck, FiMessageCircle, FiArrowLeft } from "react-icons/fi";
+import { FiArrowUpRight, FiCheck, FiMessageCircle, FiArrowLeft, FiLoader } from "react-icons/fi";
 import ServiceCard from "../components/ServiceCard";
 import CTABanner from "../components/CTABanner";
 import { resolveImage } from "../utils/resolveImage";
+import { getCloudinarySrcSet, getResponsiveSizes } from "../utils/cloudinary";
 import { buildWhatsAppLink } from "../utils/whatsapp";
 import { useSettings } from "../context/SettingsContext";
 import api from "../services/api";
@@ -13,7 +14,7 @@ import Seo from "../components/Seo";
 export default function ServiceDetail() {
   const { slug } = useParams();
   const navigate = useNavigate();
-  const { settings } = useSettings();
+  const { settings, loading: settingsLoading } = useSettings();
   const [product, setProduct] = useState(null);
   const [related, setRelated] = useState([]);
   const [activeImage, setActiveImage] = useState(0);
@@ -62,6 +63,9 @@ export default function ServiceDetail() {
   }
 
   const images = product.images?.length ? product.images : ["/images/hero-1.jpg"];
+  const currentImageUrl = resolveImage(images[activeImage], { width: 800, height: 600, crop: "fill" });
+  const currentSrcSet = getCloudinarySrcSet(images[activeImage]);
+  const currentSizes = getResponsiveSizes();
 
   return (
     <div>
@@ -88,7 +92,16 @@ export default function ServiceDetail() {
           {/* Gallery */}
           <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
             <div className="aspect-[4/3] overflow-hidden rounded-xl border border-white/10 bg-white/5">
-              <img src={resolveImage(images[activeImage])} alt={product.name} className="h-full w-full object-cover" />
+              <img
+                src={currentImageUrl}
+                srcSet={currentSrcSet}
+                sizes={currentSizes}
+                alt={product.name}
+                className="h-full w-full object-cover"
+                width={800}
+                height={600}
+                loading="eager"
+              />
             </div>
             {images.length > 1 && (
               <div className="mt-4 flex gap-3">
@@ -99,8 +112,10 @@ export default function ServiceDetail() {
                     className={`h-16 w-16 shrink-0 overflow-hidden rounded-lg border ${
                       i === activeImage ? "border-red" : "border-white/10"
                     }`}
+                    aria-label={`View image ${i + 1}`}
+                    aria-selected={i === activeImage}
                   >
-                    <img src={resolveImage(img)} alt="" className="h-full w-full object-cover" />
+                    <img src={resolveImage(img)} alt="" className="h-full w-full object-cover" loading="lazy" />
                   </button>
                 ))}
               </div>
@@ -153,14 +168,20 @@ export default function ServiceDetail() {
               >
                 Request quote for this service <FiArrowUpRight />
               </button>
-              <a
-                href={buildWhatsAppLink(settings.whatsapp, product.name)}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="btn-outline"
-              >
-                <FiMessageCircle /> WhatsApp us
-              </a>
+              {settingsLoading ? (
+                <button className="btn-outline" disabled>
+                  <FiLoader className="animate-spin mr-2" size={16} /> Loading…
+                </button>
+              ) : (
+                <a
+                  href={buildWhatsAppLink(settings.whatsapp, product.name)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn-outline"
+                >
+                  <FiMessageCircle /> WhatsApp us
+                </a>
+              )}
             </div>
           </motion.div>
         </div>

@@ -1,7 +1,8 @@
 import { Link } from "react-router-dom";
-import { FiPhone, FiMail, FiMapPin, FiFacebook, FiInstagram, FiLinkedin, FiTwitter } from "react-icons/fi";
+import { FiPhone, FiMail, FiMapPin, FiFacebook, FiInstagram, FiLinkedin, FiTwitter, FiLoader } from "react-icons/fi";
 import Logo from "./Logo";
 import { useSettings } from "../context/SettingsContext";
+import { normalizePhoneToE164, formatPhoneForDisplay } from "../utils/phone";
 
 const exploreLinks = [
   { to: "/about", label: "About us" },
@@ -10,12 +11,39 @@ const exploreLinks = [
 ];
 
 export default function Footer() {
-  const { settings } = useSettings();
+  const { settings, loading } = useSettings();
   const social = settings.socialLinks || {};
   const hasSocial = social.facebook || social.instagram || social.linkedin || social.twitter;
 
+  const phoneE164 = normalizePhoneToE164(settings.phone);
+  const whatsappE164 = normalizePhoneToE164(settings.whatsapp);
+  const phoneDisplay = formatPhoneForDisplay(settings.phone) || settings.phone;
+  const whatsappDisplay = formatPhoneForDisplay(settings.whatsapp) || settings.whatsapp;
+
+  const renderContactItem = (Icon, label, value, href, loading) => {
+    if (loading || !value) {
+      return (
+        <li key={label} className="flex items-center gap-2 text-sm text-white/60">
+          <Icon size={14} className="shrink-0" />
+          <span className="flex items-center gap-2">
+            <FiLoader className="animate-spin" size={12} />
+            Loading…
+          </span>
+        </li>
+      );
+    }
+    return (
+      <li key={label}>
+        <a href={href} className="flex items-center gap-2 text-sm text-white/60 hover:text-white">
+          <Icon size={14} className="shrink-0" />
+          {value}
+        </a>
+      </li>
+    );
+  };
+
   return (
-    <footer className="border-t border-white/10 bg-bg">
+    <footer className="border-t border-white/10 bg-bg overflow-x-hidden">
       <div className="mx-auto max-w-7xl px-5 py-14 sm:px-8">
         <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
           <div className="lg:col-span-2">
@@ -63,18 +91,18 @@ export default function Footer() {
           <div>
             <h3 className="text-sm font-bold uppercase tracking-wide text-white">Contact</h3>
             <ul className="mt-4 space-y-3">
-              <li>
-                <a href={`tel:${settings.phone}`} className="flex items-center gap-2 text-sm text-white/60 hover:text-white">
-                  <FiPhone size={14} /> {settings.phone}
-                </a>
-              </li>
-              <li>
-                <a href={`mailto:${settings.email}`} className="flex items-center gap-2 text-sm text-white/60 hover:text-white">
-                  <FiMail size={14} /> {settings.email}
-                </a>
-              </li>
+              {renderContactItem(FiPhone, "Phone", phoneDisplay, phoneE164 ? `tel:${phoneE164}` : null, loading || !settings.phone)}
+              {renderContactItem(FiMail, "Email", settings.email, settings.email ? `mailto:${settings.email}` : null, loading || !settings.email)}
               <li className="flex items-start gap-2 text-sm text-white/60">
-                <FiMapPin size={14} className="mt-0.5 shrink-0" /> {settings.address}
+                <FiMapPin size={14} className="mt-0.5 shrink-0" />
+                {loading || !settings.address ? (
+                  <>
+                    <FiLoader className="animate-spin" size={12} />
+                    <span>Loading…</span>
+                  </>
+                ) : (
+                  settings.address
+                )}
               </li>
             </ul>
           </div>

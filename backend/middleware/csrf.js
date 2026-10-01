@@ -16,7 +16,7 @@ function csrfProtection(req, res, next) {
       const token = generateCsrfToken();
       const isProd = process.env.NODE_ENV === "production";
       res.cookie(CSRF_COOKIE_NAME, token, {
-        httpOnly: false,
+        httpOnly: true,
         secure: isProd,
         sameSite: isProd ? "none" : "lax",
         maxAge: 7 * 24 * 60 * 60 * 1000,

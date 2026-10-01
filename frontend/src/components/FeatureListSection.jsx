@@ -17,10 +17,10 @@ export default function FeatureListSection({
       initial={{ opacity: 0, x: imageOnRight ? 30 : -30 }}
       whileInView={{ opacity: 1, x: 0 }}
       viewport={{ once: true, amount: 0.3 }}
-      transition={{ duration: 0.5 }}
+      transition={{ duration: 0.4 }}
       className="relative min-h-[320px] overflow-hidden lg:min-h-[560px]"
     >
-      <img src={image} alt="" className="absolute inset-0 h-full w-full object-cover" />
+      <img src={image} alt="" className="absolute inset-0 h-full w-full object-cover" aria-hidden="true" />
     </motion.div>
   );
 
@@ -29,7 +29,7 @@ export default function FeatureListSection({
       initial={{ opacity: 0, x: imageOnRight ? -30 : 30 }}
       whileInView={{ opacity: 1, x: 0 }}
       viewport={{ once: true, amount: 0.3 }}
-      transition={{ duration: 0.5 }}
+      transition={{ duration: 0.4 }}
       className="flex flex-col justify-center px-6 py-16 sm:px-10 lg:px-16"
     >
       <div className="eyebrow mb-5">{eyebrow}</div>
@@ -41,7 +41,7 @@ export default function FeatureListSection({
       <div className="mt-9 divide-y divide-white/10 border-t border-white/10">
         {items.map((item) => (
           <div key={item.title} className="flex items-start gap-4 py-5">
-            <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-red/40 text-red">
+            <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-red/40 text-red" aria-hidden="true">
               {item.icon}
             </span>
             <div>
@@ -64,8 +64,8 @@ export default function FeatureListSection({
   );
 
   return (
-    <section className="border-b border-white/10 bg-bg">
-      <div className="grid lg:grid-cols-2">
+    <section className="border-b border-white/10 bg-bg overflow-x-hidden">
+      <div className="grid lg:grid-cols-2 max-w-full">
         {imageOnRight ? (
           <>
             {contentBlock}

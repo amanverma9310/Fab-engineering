@@ -5,6 +5,29 @@ function isEmailConfigured() {
 }
 
 function buildTransporter() {
+  const service = (process.env.EMAIL_SERVICE || "").toLowerCase();
+
+  if (service === "resend") {
+    const apiKey = process.env.EMAIL_PASS;
+    return {
+      sendMail: async ({ from, to, subject, html }) => {
+        const res = await fetch("https://api.resend.com/emails", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${apiKey}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ from, to: [to], subject, html }),
+        });
+        if (!res.ok) {
+          const errText = await res.text();
+          throw new Error(`Resend API error: ${res.status} ${errText}`);
+        }
+        return res.json();
+      },
+    };
+  }
+
   return nodemailer.createTransport({
     service: process.env.EMAIL_SERVICE,
     auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS },

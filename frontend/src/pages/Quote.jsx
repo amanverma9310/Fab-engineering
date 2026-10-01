@@ -1,11 +1,12 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import toast from "react-hot-toast";
-import { FiArrowUpRight, FiArrowLeft, FiUpload, FiX, FiCheckCircle } from "react-icons/fi";
+import { FiArrowUpRight, FiArrowLeft, FiUpload, FiX, FiCheckCircle, FiAlertCircle } from "react-icons/fi";
 import PageHeader from "../components/PageHeader";
 import api, { ensureCsrfToken } from "../services/api";
 import Seo from "../components/Seo";
+import { validateIndianPhone } from "../utils/phone";
 
 const steps = [
   { key: "customer", label: "Customer" },
@@ -39,6 +40,8 @@ export default function Quote() {
   const [files, setFiles] = useState([]);
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(null);
+  const [errors, setErrors] = useState({});
+  const firstErrorRef = useRef(null);
 
   useEffect(() => {
     ensureCsrfToken().catch(() => {});
@@ -61,6 +64,14 @@ export default function Quote() {
       return;
     }
     setForm((f) => ({ ...f, [name]: value }));
+    // Clear error for this field on change
+    if (errors[name]) {
+      setErrors((prev) => {
+        const next = { ...prev };
+        delete next[name];
+        return next;
+      });
+    }
   };
 
   const handleFiles = (e) => {
@@ -71,15 +82,32 @@ export default function Quote() {
   const removeFile = (i) => setFiles((prev) => prev.filter((_, idx) => idx !== i));
 
   const validateStep = () => {
+    const newErrors = {};
     if (step === 0) {
-      if (!form.customerName || !form.email || !form.phone) {
-        toast.error("Please fill in your name, email and phone.");
-        return false;
+      if (!form.customerName.trim()) newErrors.customerName = "Name is required";
+      if (!form.email.trim()) newErrors.email = "Email is required";
+      else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) newErrors.email = "Enter a valid email";
+      const phoneValidation = validateIndianPhone(form.phone);
+      if (!form.phone.trim()) newErrors.phone = "Phone number is required";
+      else if (!phoneValidation.valid) newErrors.phone = "Enter a valid 10-digit Indian mobile number";
+      if (!form.product && !form.service.trim()) newErrors.service = "Please select a service or enter a custom service";
+    }
+    if (step === 1) {
+      // Project step - require at least description or projectDetails
+      if (!form.description.trim() && !form.projectDetails.trim()) {
+        newErrors.description = "Please provide a description or project details";
+        newErrors.projectDetails = "Please provide a description or project details";
       }
-      if (!form.product && !form.service) {
-        toast.error("Please select the service you need.");
-        return false;
-      }
+    }
+    setErrors(newErrors);
+    if (Object.keys(newErrors).length > 0) {
+      // Focus first error field
+      const firstErrorKey = Object.keys(newErrors)[0];
+      setTimeout(() => {
+        const el = document.getElementById(`quote-${firstErrorKey}`);
+        if (el) el.focus();
+      }, 0);
+      return false;
     }
     return true;
   };
@@ -93,6 +121,7 @@ export default function Quote() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (submitting) return;
+    if (!validateStep()) return;
     setSubmitting(true);
 
     try {
@@ -176,24 +205,61 @@ export default function Quote() {
                 {step === 0 && (
                   <div className="grid gap-6 sm:grid-cols-2">
                     <div>
-                      <label className="label-field">Your name *</label>
-                      <input name="customerName" value={form.customerName} onChange={handleChange} className="input-field" />
+                      <label htmlFor="quote-customerName" className="label-field">Your name *</label>
+                      <input
+                        id="quote-customerName"
+                        name="customerName"
+                        value={form.customerName}
+                        onChange={handleChange}
+                        className={`input-field ${errors.customerName ? "border-red" : ""}`}
+                        aria-invalid={errors.customerName ? "true" : "false"}
+                        aria-describedby={errors.customerName ? "quote-customerName-error" : undefined}
+                      />
+                      {errors.customerName && (
+                        <p id="quote-customerName-error" className="mt-1 text-sm text-red" role="alert">{errors.customerName}</p>
+                      )}
                     </div>
                     <div>
-                      <label className="label-field">Company name</label>
-                      <input name="companyName" value={form.companyName} onChange={handleChange} className="input-field" />
+                      <label htmlFor="quote-companyName" className="label-field">Company name</label>
+                      <input id="quote-companyName" name="companyName" value={form.companyName} onChange={handleChange} className="input-field" />
                     </div>
                     <div>
-                      <label className="label-field">Email *</label>
-                      <input type="email" name="email" value={form.email} onChange={handleChange} className="input-field" />
+                      <label htmlFor="quote-email" className="label-field">Email *</label>
+                      <input
+                        type="email"
+                        id="quote-email"
+                        name="email"
+                        value={form.email}
+                        onChange={handleChange}
+                        className={`input-field ${errors.email ? "border-red" : ""}`}
+                        aria-invalid={errors.email ? "true" : "false"}
+                        aria-describedby={errors.email ? "quote-email-error" : undefined}
+                      />
+                      {errors.email && <p id="quote-email-error" className="mt-1 text-sm text-red" role="alert">{errors.email}</p>}
                     </div>
                     <div>
-                      <label className="label-field">Phone *</label>
-                      <input name="phone" value={form.phone} onChange={handleChange} className="input-field" />
+                      <label htmlFor="quote-phone" className="label-field">Phone *</label>
+                      <input
+                        id="quote-phone"
+                        name="phone"
+                        value={form.phone}
+                        onChange={handleChange}
+                        className={`input-field ${errors.phone ? "border-red" : ""}`}
+                        aria-invalid={errors.phone ? "true" : "false"}
+                        aria-describedby={errors.phone ? "quote-phone-error" : "quote-phone-hint"}
+                        inputMode="tel"
+                        autoComplete="tel"
+                      />
+                      {errors.phone ? (
+                        <p id="quote-phone-error" className="mt-1 text-sm text-red" role="alert">{errors.phone}</p>
+                      ) : (
+                        <p id="quote-phone-hint" className="mt-1 text-xs text-white/40">10-digit Indian mobile number</p>
+                      )}
                     </div>
                     <div>
-                      <label className="label-field">WhatsApp</label>
-                      <input name="whatsapp" value={form.whatsapp} onChange={handleChange} className="input-field" />
+                      <label htmlFor="quote-whatsapp" className="label-field">WhatsApp</label>
+                      <input id="quote-whatsapp" name="whatsapp" value={form.whatsapp} onChange={handleChange} className="input-field" inputMode="tel" autoComplete="tel" />
+                      <p className="mt-1 text-xs text-white/40">Optional — for faster updates</p>
                     </div>
                     {/* Honeypot field - hidden from humans, catches bots */}
                     <input
@@ -207,8 +273,16 @@ export default function Quote() {
                       aria-hidden="true"
                     />
                     <div className="sm:col-span-2">
-                      <label className="label-field">Service required *</label>
-                      <select name="product" value={form.product} onChange={handleChange} className="input-field">
+                      <label htmlFor="quote-product" className="label-field">Service required *</label>
+                      <select
+                        id="quote-product"
+                        name="product"
+                        value={form.product}
+                        onChange={handleChange}
+                        className={`input-field ${errors.service ? "border-red" : ""}`}
+                        aria-invalid={errors.service ? "true" : "false"}
+                        aria-describedby={errors.service ? "quote-service-error" : undefined}
+                      >
                         <option value="">Select one</option>
                         {products.map((p) => (
                           <option key={p._id} value={p._id}>
@@ -216,6 +290,7 @@ export default function Quote() {
                           </option>
                         ))}
                       </select>
+                      {errors.service && <p id="quote-service-error" className="mt-1 text-sm text-red" role="alert">{errors.service}</p>}
                       {form.service && (
                         <p className="mt-2 text-xs text-white/40">
                           Selected service: <span className="text-white/70">{form.service}</span>
@@ -228,28 +303,51 @@ export default function Quote() {
                 {step === 1 && (
                   <div className="grid gap-6 sm:grid-cols-2">
                     <div>
-                      <label className="label-field">Quantity</label>
-                      <input type="number" min="0" name="quantity" value={form.quantity} onChange={handleChange} className="input-field" />
+                      <label htmlFor="quote-quantity" className="label-field">Quantity</label>
+                      <input type="number" min="0" id="quote-quantity" name="quantity" value={form.quantity} onChange={handleChange} className="input-field" />
                     </div>
                     <div>
-                      <label className="label-field">Material</label>
-                      <input name="material" value={form.material} onChange={handleChange} className="input-field" placeholder="e.g. Mild steel, SS304" />
+                      <label htmlFor="quote-material" className="label-field">Material</label>
+                      <input id="quote-material" name="material" value={form.material} onChange={handleChange} className="input-field" placeholder="e.g. Mild steel, SS304" />
                     </div>
                     <div>
-                      <label className="label-field">Expected date</label>
-                      <input type="date" name="expectedDate" value={form.expectedDate} onChange={handleChange} className="input-field" />
+                      <label htmlFor="quote-expectedDate" className="label-field">Expected date</label>
+                      <input type="date" id="quote-expectedDate" name="expectedDate" value={form.expectedDate} onChange={handleChange} className="input-field" />
                     </div>
                     <div>
-                      <label className="label-field">Delivery address</label>
-                      <input name="address" value={form.address} onChange={handleChange} className="input-field" />
+                      <label htmlFor="quote-address" className="label-field">Delivery address</label>
+                      <input id="quote-address" name="address" value={form.address} onChange={handleChange} className="input-field" />
                     </div>
                     <div className="sm:col-span-2">
-                      <label className="label-field">Description</label>
-                      <textarea name="description" value={form.description} onChange={handleChange} rows={3} className="input-field resize-none" />
+                      <label htmlFor="quote-description" className="label-field">Description *</label>
+                      <textarea
+                        id="quote-description"
+                        name="description"
+                        value={form.description}
+                        onChange={handleChange}
+                        rows={3}
+                        className={`input-field resize-none ${errors.description ? "border-red" : ""}`}
+                        aria-invalid={errors.description ? "true" : "false"}
+                        aria-describedby={errors.description ? "quote-description-error" : "quote-description-hint"}
+                      />
+                      {errors.description && <p id="quote-description-error" className="mt-1 text-sm text-red" role="alert">{errors.description}</p>}
+                      {!errors.description && <p id="quote-description-hint" className="mt-1 text-xs text-white/40">What are you building? Key requirements, tolerances, finish.</p>}
                     </div>
                     <div className="sm:col-span-2">
-                      <label className="label-field">Project details</label>
-                      <textarea name="projectDetails" value={form.projectDetails} onChange={handleChange} rows={3} className="input-field resize-none" placeholder="Tolerances, finish, deadlines, anything else useful to know." />
+                      <label htmlFor="quote-projectDetails" className="label-field">Project details *</label>
+                      <textarea
+                        id="quote-projectDetails"
+                        name="projectDetails"
+                        value={form.projectDetails}
+                        onChange={handleChange}
+                        rows={3}
+                        className={`input-field resize-none ${errors.projectDetails ? "border-red" : ""}`}
+                        aria-invalid={errors.projectDetails ? "true" : "false"}
+                        aria-describedby={errors.projectDetails ? "quote-projectDetails-error" : "quote-projectDetails-hint"}
+                        placeholder="Tolerances, finish, deadlines, anything else useful to know."
+                      />
+                      {errors.projectDetails && <p id="quote-projectDetails-error" className="mt-1 text-sm text-red" role="alert">{errors.projectDetails}</p>}
+                      {!errors.projectDetails && <p id="quote-projectDetails-hint" className="mt-1 text-xs text-white/40">Additional technical details, constraints, or references.</p>}
                     </div>
                   </div>
                 )}
@@ -274,7 +372,7 @@ export default function Quote() {
                         {files.map((f, i) => (
                           <li key={i} className="flex items-center justify-between rounded-md border border-white/10 px-3 py-2 text-sm text-white/70">
                             <span className="truncate">{f.name}</span>
-                            <button type="button" onClick={() => removeFile(i)} className="text-white/40 hover:text-red">
+                            <button type="button" onClick={() => removeFile(i)} className="text-white/40 hover:text-red" aria-label={`Remove ${f.name}`}>
                               <FiX size={14} />
                             </button>
                           </li>

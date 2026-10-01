@@ -9,7 +9,7 @@ export default function MainLayout() {
   const location = useLocation();
 
   return (
-    <div className="flex min-h-screen flex-col bg-bg text-white">
+    <div className="flex min-h-screen flex-col bg-bg text-white overflow-x-hidden">
       <Navbar />
       <main className="flex-1">
         <AnimatePresence mode="wait">

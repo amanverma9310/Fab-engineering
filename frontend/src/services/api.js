@@ -14,6 +14,29 @@ const api = axios.create({
   withCredentials: true,
 });
 
+// Public endpoints that don't require CSRF (protected by Origin/Referer validation)
+const PUBLIC_MUTATION_ENDPOINTS = ["/contact", "/inquiries"];
+
+function isPublicMutationEndpoint(url) {
+  if (!url) return false;
+  const pathname = url.split("?")[0];
+  return PUBLIC_MUTATION_ENDPOINTS.some((endpoint) => pathname === endpoint || pathname.startsWith(endpoint + "/"));
+}
+
+// Clear old cookies that may conflict with new CSRF/origin setup
+function clearLegacyCookies() {
+  const cookiesToClear = ["csrf_token", "token"];
+  cookiesToClear.forEach((name) => {
+    document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; domain=${window.location.hostname}`;
+    document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; domain=.${window.location.hostname}`;
+  });
+}
+
+// Run once on module load to clean up stale cookies
+if (typeof window !== "undefined") {
+  clearLegacyCookies();
+}
+
 async function ensureCsrfToken() {
   if (csrfToken) return csrfToken;
   if (csrfTokenPromise) return csrfTokenPromise;
@@ -41,7 +64,10 @@ function clearCsrfToken() {
 
 api.interceptors.request.use(async (config) => {
   const unsafeMethods = ["post", "put", "patch", "delete"];
-  if (unsafeMethods.includes(config.method?.toLowerCase())) {
+  const method = config.method?.toLowerCase();
+  const url = config.url || "";
+
+  if (unsafeMethods.includes(method) && !isPublicMutationEndpoint(url)) {
     const token = await ensureCsrfToken();
     if (token) {
       config.headers[CSRF_HEADER_NAME] = token;
@@ -59,9 +85,15 @@ api.interceptors.response.use(
     const message =
       err.response?.data?.message ||
       (err.request ? "Can't reach the server. Please try again shortly." : err.message);
+    // Log actual error for debugging
+    if (err.response) {
+      console.error("[API Error]", err.response.status, err.response.data);
+    } else if (err.request) {
+      console.error("[API Network Error]", err.message);
+    }
     return Promise.reject({ message, status: err.response?.status });
   }
 );
 
-export { ensureCsrfToken, clearCsrfToken };
+export { ensureCsrfToken, clearCsrfToken, clearLegacyCookies };
 export default api;

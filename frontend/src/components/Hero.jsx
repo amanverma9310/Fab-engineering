@@ -3,6 +3,8 @@ import { Link } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { FiArrowUpRight, FiChevronRight } from "react-icons/fi";
 import { useSettings } from "../context/SettingsContext";
+import { resolveImage } from "../utils/resolveImage";
+import { getCloudinarySrcSet, getResponsiveSizes } from "../utils/cloudinary";
 
 const AUTO_ROTATE_MS = 6000;
 
@@ -47,19 +49,34 @@ export default function Hero() {
   }, [slides.length]);
 
   const slide = slides[index];
+  const currentImageUrl = resolveImage(slide.image, { width: 1920, height: 1080, crop: "fill" });
+  const currentSrcSet = getCloudinarySrcSet(slide.image, [800, 1200, 1600, 1920]);
+  const currentSizes = getResponsiveSizes({ sm: 640, md: 768, lg: 1024, xl: 1920 });
 
   return (
-    <section className="relative min-h-[88vh] overflow-hidden border-b border-white/10">
+    <section className="relative min-h-[88vh] overflow-hidden border-b border-white/10 overflow-x-hidden">
+      {/* Preload LCP image */}
+      <link rel="preload" as="image" href={currentImageUrl} />
+
       <AnimatePresence mode="wait">
         <motion.div
           key={index}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.6 }}
+          transition={{ duration: 0.4 }}
           className="absolute inset-0"
         >
-          <img src={slide.image} alt="" className="h-full w-full object-cover" />
+          <img
+            src={currentImageUrl}
+            srcSet={currentSrcSet}
+            sizes={currentSizes}
+            alt={slide.caption}
+            className="h-full w-full object-cover"
+            width={1920}
+            height={1080}
+            loading="eager"
+          />
           <div className="absolute inset-0 bg-gradient-to-r from-bg via-bg/70 to-bg/20" />
           <div className="absolute inset-0 bg-gradient-to-t from-bg via-transparent to-bg/40" />
         </motion.div>
@@ -69,10 +86,10 @@ export default function Hero() {
         <AnimatePresence mode="wait">
           <motion.div
             key={index}
-            initial={{ opacity: 0, y: 24 }}
+            initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -16 }}
-            transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+            transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
             className="max-w-3xl"
           >
             <div className="eyebrow mb-5">{slide.eyebrow}</div>
@@ -108,12 +125,14 @@ export default function Hero() {
           <span className="font-display text-sm text-white/70">
             {String(index + 1).padStart(2, "0")} — {String(slides.length).padStart(2, "0")}
           </span>
-          <div className="flex gap-1.5">
+          <div className="flex gap-1.5" role="tablist" aria-label="Hero slides">
             {slides.map((_, i) => (
               <button
                 key={i}
                 onClick={() => setIndex(i)}
                 aria-label={`Go to slide ${i + 1}`}
+                aria-selected={i === index}
+                role="tab"
                 className={`h-1.5 rounded-full transition-all ${
                   i === index ? "w-6 bg-red" : "w-1.5 bg-white/25"
                 }`}

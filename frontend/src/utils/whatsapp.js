@@ -1,6 +1,8 @@
+import { normalizePhoneToE164 } from "./phone";
+
 /** Builds a wa.me link with a dynamically generated, non-hardcoded message. */
 export function buildWhatsAppLink(whatsappNumber, serviceOrProductName) {
-  const digits = (whatsappNumber || "").replace(/[^\d]/g, "");
+  const digits = normalizePhoneToE164(whatsappNumber).replace(/^\+/, "");
   const message = serviceOrProductName
     ? `Hello, I am interested in ${serviceOrProductName}. Please share more details.`
     : "Hello, I'd like to know more about FAB Engineering's services.";
