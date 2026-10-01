@@ -1,14 +1,20 @@
 const nodemailer = require("nodemailer");
 
 function isEmailConfigured() {
-  return Boolean(process.env.EMAIL_USER && process.env.EMAIL_PASS && process.env.EMAIL_SERVICE);
+  return Boolean(
+    process.env.EMAIL_USER &&
+    process.env.EMAIL_PASS &&
+    process.env.EMAIL_SERVICE
+  );
 }
 
 function buildTransporter() {
   const service = (process.env.EMAIL_SERVICE || "").toLowerCase();
 
+  // Resend API
   if (service === "resend") {
     const apiKey = process.env.EMAIL_PASS;
+
     return {
       sendMail: async ({ from, to, subject, html }) => {
         const res = await fetch("https://api.resend.com/emails", {
@@ -17,105 +23,175 @@ function buildTransporter() {
             Authorization: `Bearer ${apiKey}`,
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ from, to: [to], subject, html }),
+          body: JSON.stringify({
+            from,
+            to: [to],
+            subject,
+            html,
+          }),
         });
+
         if (!res.ok) {
           const errText = await res.text();
-          throw new Error(`Resend API error: ${res.status} ${errText}`);
+
+          throw new Error(
+            `Resend API error: ${res.status} ${errText}`
+          );
         }
+
         return res.json();
       },
     };
   }
 
+  // Gmail / other SMTP service
   return nodemailer.createTransport({
     service: process.env.EMAIL_SERVICE,
-    auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS },
+    auth: {
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASS,
+    },
   });
 }
 
 function escapeHtml(str = "") {
   return String(str)
-    .replace(/&/g, "&")
-    .replace(/</g, "<")
-    .replace(/>/g, ">")
-    .replace(/"/g, """);
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
 }
 
 function rows(fields) {
   return fields
-    .filter(([, v]) => v !== undefined && v !== null && v !== "")
-    .map(([k, v]) => `<p style="margin:4px 0"><strong>${k}:</strong> ${escapeHtml(String(v))}</p>`)
+    .filter(([, value]) => {
+      return value !== undefined && value !== null && value !== "";
+    })
+    .map(
+      ([key, value]) =>
+        `<p style="margin:4px 0">
+          <strong>${escapeHtml(key)}:</strong>
+          ${escapeHtml(String(value))}
+        </p>`
+    )
     .join("");
 }
 
 /**
- * Sends the business-owner notification email. Never throws — email is a
- * nice-to-have; the underlying record must already be saved to MongoDB
- * before this is called, and its success/failure never affects the
- * customer-facing response.
+ * Sends notification email to the website owner.
+ * Email failure does not affect the main API request.
  */
 async function sendOwnerNotification({ subject, fields }) {
-  console.log("[email] sendOwnerNotification called, configured:", isEmailConfigured());
-  console.log("[email] EMAIL_SERVICE:", process.env.EMAIL_SERVICE);
-  console.log("[email] EMAIL_USER:", process.env.EMAIL_USER ? "***" : "NOT SET");
-  console.log("[email] NOTIFY_EMAIL:", process.env.NOTIFY_EMAIL || "NOT SET (will use EMAIL_USER)");
-  
   if (!isEmailConfigured()) {
-    console.warn("[email] Skipping notification — EMAIL_SERVICE/EMAIL_USER/EMAIL_PASS not set.");
-    return { sent: false, reason: "not_configured" };
+    console.warn(
+      "[email] Skipping notification — EMAIL_SERVICE/EMAIL_USER/EMAIL_PASS not set."
+    );
+
+    return {
+      sent: false,
+      reason: "not_configured",
+    };
   }
 
   try {
     const transporter = buildTransporter();
-    const to = process.env.NOTIFY_EMAIL || process.env.EMAIL_USER;
-    console.log("[email] Sending to:", to);
-    const result = await transporter.sendMail({
+
+    const to =
+      process.env.NOTIFY_EMAIL || process.env.EMAIL_USER;
+
+    await transporter.sendMail({
       from: `"FAB Engineering Website" <${process.env.EMAIL_USER}>`,
       to,
       subject,
-      html: `<div style="font-family:sans-serif;line-height:1.6">${rows(fields)}</div>`,
+      html: `
+        <div style="font-family:sans-serif;line-height:1.6">
+          ${rows(fields)}
+        </div>
+      `,
     });
-    console.log("[email] Owner notification sent:", result.messageId || result.id);
-    return { sent: true };
+
+    return {
+      sent: true,
+    };
   } catch (err) {
-    console.error("[email] Failed to send owner notification:", err.message);
-    console.error("[email] Full error:", err);
-    return { sent: false, reason: "send_failed", error: err.message };
+    console.error(
+      "[email] Failed to send owner notification:",
+      err.message
+    );
+
+    return {
+      sent: false,
+      reason: "send_failed",
+    };
   }
 }
 
-/** Optional confirmation email to the customer — also never throws. */
-async function sendCustomerConfirmation({ to, name, referenceId }) {
-  console.log("[email] sendCustomerConfirmation called for:", to);
+/**
+ * Sends confirmation email to customer.
+ */
+async function sendCustomerConfirmation({
+  to,
+  name,
+  referenceId,
+}) {
   if (!isEmailConfigured() || !to) {
-    console.warn("[email] Skipping customer confirmation — not configured or no recipient");
-    return { sent: false };
+    return {
+      sent: false,
+    };
   }
 
   try {
     const transporter = buildTransporter();
-    const result = await transporter.sendMail({
+
+    await transporter.sendMail({
       from: `"FAB Engineering" <${process.env.EMAIL_USER}>`,
+
       to,
-      subject: `We've received your request${referenceId ? ` (${referenceId})` : ""}`,
+
+      subject: `We've received your request${
+        referenceId ? ` (${referenceId})` : ""
+      }`,
+
       html: `
         <div style="font-family:sans-serif;line-height:1.6">
           <p>Hi ${escapeHtml(name || "there")},</p>
-          <p>Thanks for reaching out to FAB Engineering. We've received your request${
-            referenceId ? ` (reference <strong>${escapeHtml(referenceId)}</strong>)` : ""
-          } and our team will get back to you shortly.</p>
+
+          <p>
+            Thanks for reaching out to FAB Engineering.
+            We've received your request
+            ${
+              referenceId
+                ? ` (reference <strong>${escapeHtml(
+                    referenceId
+                  )}</strong>)`
+                : ""
+            }
+            and our team will get back to you shortly.
+          </p>
+
           <p>— FAB Engineering</p>
         </div>
       `,
     });
-    console.log("[email] Customer confirmation sent:", result.messageId || result.id);
-    return { sent: true };
+
+    return {
+      sent: true,
+    };
   } catch (err) {
-    console.error("[email] Failed to send customer confirmation:", err.message);
-    console.error("[email] Full error:", err);
-    return { sent: false };
+    console.error(
+      "[email] Failed to send customer confirmation:",
+      err.message
+    );
+
+    return {
+      sent: false,
+    };
   }
 }
 
-module.exports = { sendOwnerNotification, sendCustomerConfirmation, isEmailConfigured };
+module.exports = {
+  sendOwnerNotification,
+  sendCustomerConfirmation,
+  isEmailConfigured,
+};
